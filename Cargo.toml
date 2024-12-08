@@ -1,0 +1,8 @@
+[package]
+name = "poc-honeycomb-gpu"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cudarc = "0.12.1"
+honeycomb = { git = "https://github.com/LIHPC-Computational-Geometry/honeycomb",  rev = "e7dbe28"}
