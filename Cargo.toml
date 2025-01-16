@@ -3,9 +3,14 @@ name = "poc-honeycomb-gpu"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-path = "src/lib.rs"
+[[bin]]
+name = "mapgen"
+path = "src/main.rs"
+
+# [lib]
+# path = "src/lib.rs"
 
 [dependencies]
-cudarc = "0.12.1"
-honeycomb = { git = "https://github.com/LIHPC-Computational-Geometry/honeycomb",  rev = "e7dbe28"}
+cudarc = { version = "0.12.1", features = ["cuda-12060"] }
+honeycomb = { git = "https://github.com/LIHPC-Computational-Geometry/honeycomb",  tag = "0.7.0"}
+rayon = "1.10.0"
