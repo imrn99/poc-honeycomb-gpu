@@ -10,7 +10,7 @@ use cudarc::{
 
 use rayon::prelude::*;
 
-use honeycomb::prelude::{CMap2, CMapBuilder, DartIdType};
+use honeycomb::prelude::{CMap2, CMapBuilder, CoordsFloat, DartIdType};
 
 const N_X: usize = 2048;
 const N_Y: usize = 2048;
@@ -24,7 +24,7 @@ const GRID_DIMS: (u32, u32, u32) = (
     1,
 );
 
-fn main() -> Result<(), DriverError> {
+fn generate_beta() -> Result<Vec<DartIdType>, DriverError> {
     let launch_params = LaunchConfig {
         grid_dim: GRID_DIMS,
         block_dim: BLOCK_DIMS,
@@ -52,31 +52,75 @@ fn main() -> Result<(), DriverError> {
         "grid kernel executed in {}ms",
         instant.elapsed().as_millis()
     );
-    instant = Instant::now();
 
+    #[cfg(debug_assertions)] // debug only
+    {
+        // we check correctness by building a map on CPU & comparing values
+        let map: CMap2<f32> = CMapBuilder::unit_grid(N_X).build().unwrap();
+        println!("map built in {}ms", instant.elapsed().as_millis());
+        instant = Instant::now();
+
+        let n_correct = out_host
+            .chunks(3)
+            .enumerate()
+            .par_bridge()
+            .flat_map(|(i, c)| {
+                let d = i as DartIdType; // account for the null dart
+                let &[b0, b1, b2] = c else { unreachable!() };
+                [
+                    b0 as DartIdType == map.beta::<0>(d),
+                    b1 as DartIdType == map.beta::<1>(d),
+                    b2 as DartIdType == map.beta::<2>(d),
+                ]
+            })
+            .filter(|a| *a)
+            .count();
+        let n_tot = 3 * N_DARTS;
+        assert_eq!(n_tot, n_correct);
+        println!("checked validity in {}ms", instant.elapsed().as_millis());
+    }
+
+    Ok(out_host)
+}
+
+fn build_gpu<T: CoordsFloat>() -> Result<CMap2<T>, DriverError> {
+    let betas = generate_beta()?;
+    let instant = Instant::now();
     // we check correctness by building a map on CPU & comparing values
-    let map: CMap2<f32> = CMapBuilder::unit_grid(N_X).build().unwrap();
-    println!("map built in {}ms", instant.elapsed().as_millis());
-    instant = Instant::now();
+    let map: CMap2<T> = CMapBuilder::default().n_darts(N_DARTS).build().unwrap();
 
-    let n_correct = out_host
-        .chunks(3)
-        .enumerate()
-        .par_bridge()
-        .flat_map(|(i, c)| {
-            let d = i as DartIdType; // account for the null dart
-            let &[b0, b1, b2] = c else { unreachable!() };
+    betas.chunks(3).enumerate().par_bridge().for_each(|(i, c)| {
+        let d = i as DartIdType; // account for the null dart
+        let &[b0, b1, b2] = c else { unreachable!() };
+        map.set_betas(d, [b0, b1, b2]);
+    });
+    println!("[GPU] map built in {}ms", instant.elapsed().as_millis());
+
+    Ok(map)
+}
+
+fn main() -> Result<(), DriverError> {
+    let map_gpu: CMap2<f32> = build_gpu()?;
+
+    let mut instant = Instant::now();
+    let map_cpu: CMap2<f32> = CMapBuilder::unit_grid(N_X).build().unwrap();
+    println!("[CPU] map built in {}ms", instant.elapsed().as_millis());
+
+    instant = Instant::now();
+    let n_correct = (0..N_DARTS as DartIdType)
+        .into_par_iter()
+        .flat_map(|d| {
             [
-                b0 as DartIdType == map.beta::<0>(d),
-                b1 as DartIdType == map.beta::<1>(d),
-                b2 as DartIdType == map.beta::<2>(d),
+                map_gpu.beta::<0>(d) == map_cpu.beta::<0>(d),
+                map_gpu.beta::<1>(d) == map_cpu.beta::<1>(d),
+                map_gpu.beta::<2>(d) == map_cpu.beta::<2>(d),
             ]
         })
         .filter(|a| *a)
         .count();
     let n_tot = 3 * N_DARTS;
     assert_eq!(n_tot, n_correct);
-    println!("checked validity in {}ms", instant.elapsed().as_millis());
+    println!("checked result in {}ms", instant.elapsed().as_millis());
 
     Ok(())
 }
