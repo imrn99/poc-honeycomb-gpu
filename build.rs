@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf, process::Command};
 
-// use bindgen::CargoCallbacks;
-// use regex::Regex;
+use bindgen::CargoCallbacks;
+use regex::Regex;
 
 fn main() {
     println!("cargo:rerun-if-changed=cuda");
@@ -24,7 +24,6 @@ fn main() {
         "Failed to compile CUDA source to PTX."
     );
 
-    /*
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
@@ -52,5 +51,4 @@ fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     std::fs::write(out_path.join("bindings.rs"), modified_bindings.as_bytes())
         .expect("Failed to write bindings");
-    */
 }

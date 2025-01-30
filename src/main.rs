@@ -10,9 +10,9 @@ use cudarc::{
 
 use rayon::prelude::*;
 
-use honeycomb::prelude::{CMap2, CMapBuilder, CoordsFloat, DartIdType};
+use honeycomb::prelude::{CMap2, CMapBuilder, CoordsFloat};
 
-// include!(concat!(env!("OUT_DIR"), "/binding.rs"));
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 const N_X: usize = 2048;
 const N_Y: usize = 2048;
