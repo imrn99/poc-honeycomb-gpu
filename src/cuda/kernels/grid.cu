@@ -33,7 +33,7 @@ extern "C" __global__ void generate_2d_grid_betaf(DartIdType* out, size_t n_x, s
     }
 }
 
-extern "C" __global__ void generate_2d_grid_vertices(DVertex2* out, float lc_x, float lc_y, size_t n_x, size_t n_y, size_t n_out) {
+extern "C" __global__ void generate_2d_grid_vertices(CuVertex2* out, float lc_x, float lc_y, size_t n_x, size_t n_y, size_t n_out) {
     // cell coordinates in the generated grid
     uint64_t ix = threadIdx.x + blockIdx.x * blockDim.x;
     uint64_t iy = threadIdx.y + blockIdx.y * blockDim.y;

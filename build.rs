@@ -28,6 +28,9 @@ fn main() {
         // The input header we would like to generate
         // bindings for.
         .header("src/cuda/includes/wrapper.h")
+        .blocklist_type(".*_t")
+        .blocklist_type("__u_.*")
+        .blocklist_item("__glibc_c99_flexarr_available")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(CargoCallbacks))

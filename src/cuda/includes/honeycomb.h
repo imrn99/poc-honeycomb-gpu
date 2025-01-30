@@ -9,7 +9,7 @@ typedef uint32_t EdgeIdType;
 typedef uint32_t FaceIdType;
 typedef uint32_t VolumeIdType;
 
-struct DVertex2 {
+struct CuVertex2 {
     float data[2];
 };
 
