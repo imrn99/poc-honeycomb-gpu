@@ -115,10 +115,14 @@ fn build_gpu<T: CoordsFloat>() -> Result<CMap2<T>, DriverError> {
         let [b0, b1, b2] = c else { unreachable!() };
         map.set_betas(d, [*b0, *b1, *b2]);
     });
+
     let vertices = generate_vertices(dev.clone())?;
-    let vids = map.iter_vertices().collect::<Vec<_>>();
-    vids.par_iter().for_each(|vid| {
-        map.force_write_vertex(*vid, vertices[*vid as usize]);
+    let vids = (1..map.n_darts() as DartIdType)
+        .zip(vertices.into_iter())
+        .filter(|(d, _)| *d as VertexIdType == map.vertex_id(*d))
+        .collect::<Vec<_>>();
+    vids.par_iter().for_each(|(d, v)| {
+        map.force_write_vertex(*d as VertexIdType, *v);
     });
     Ok(map)
 }
