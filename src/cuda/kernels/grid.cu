@@ -39,7 +39,8 @@ extern "C" __global__ void generate_2d_grid_vertices(CuVertex2* out, float lc_x,
     uint64_t iy = threadIdx.y + blockIdx.y * blockDim.y;
     // dart of the thread
     uint64_t dart = 1 + 4 * ix + 4 * n_x * iy + threadIdx.z;
-    // vertex associated to the dart; we'll filter useful values when building on the host
+    // compute the vertex associated to every single dart;
+    // we'll filter useful values when building on the host
     if (dart < n_out) {
       switch ((1+threadIdx.z) % 4) {
           case 1: // d1 -> bottom left corner
