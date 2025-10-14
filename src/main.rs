@@ -106,23 +106,21 @@ fn build_gpu<T: CoordsFloat>() -> Result<CMap2<T>, DriverError> {
     )?;
 
     // N_DARTS-1 bc the constant count the null dart; the builder does too
-    let map: CMap2<T> = CMapBuilder::default().n_darts(N_DARTS - 1).build().unwrap();
+    let map: CMap2<T> = CMapBuilder::<2, T>::from_n_darts(N_DARTS - 1)
+        .build()
+        .unwrap();
 
     let betas = generate_beta(dev.clone())?;
     let bcs = betas.chunks(3).enumerate().collect::<Vec<_>>();
-    bcs.par_iter().for_each(|(i, c)| {
-        let d = *i as DartIdType; // account for the null dart
-        let [b0, b1, b2] = c else { unreachable!() };
-        map.set_betas(d, [*b0, *b1, *b2]);
+    bcs.into_par_iter().for_each(|(i, c)| {
+        let d = i as DartIdType; // account for the null dart
+        let &[b0, b1, b2] = c else { unreachable!() };
+        map.set_betas(d, [b0, b1, b2]);
     });
 
     let vertices = generate_vertices(dev.clone())?;
-    let vids = (1..map.n_darts() as DartIdType)
-        .zip(vertices.into_iter())
-        .filter(|(d, _)| *d as VertexIdType == map.vertex_id(*d))
-        .collect::<Vec<_>>();
-    vids.par_iter().for_each(|(d, v)| {
-        map.force_write_vertex(*d as VertexIdType, *v);
+    map.par_iter_vertices().for_each(|d| {
+        map.force_write_vertex(d as VertexIdType, vertices[d as usize]);
     });
     Ok(map)
 }
