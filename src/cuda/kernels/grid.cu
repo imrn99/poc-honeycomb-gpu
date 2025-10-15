@@ -16,28 +16,6 @@ extern "C" __global__ void generate_2d_grid_betaf(DartIdType* out, size_t n_x, s
         out[dart*3]   = dart + BETAS[threadIdx.z][0];
         out[dart*3+1] = dart + BETAS[threadIdx.z][1];
         out[dart*3+2] = conds[threadIdx.z] ? 0 : dart + BETAS[threadIdx.z][2] + NX[threadIdx.z] * n_x;
-      // switch (threadIdx.z) {
-      //     case 0: // d1
-      //         out[dart*3] = dart + 3;
-      //         out[dart*3+1] = dart + 1;
-      //         out[dart*3+2] = (iy == 0) ? 0 : dart + 2 - 4 * n_x;
-      //         break;
-      //     case 1: // d2
-      //         out[dart*3] = dart - 1;
-      //         out[dart*3+1] = dart + 1;
-      //         out[dart*3+2] = (ix == n_x - 1) ? 0 : dart + 6;
-      //         break;
-      //     case 2: // d3
-      //         out[dart*3] = dart - 1;
-      //         out[dart*3+1] = dart + 1;
-      //         out[dart*3+2] = (iy == n_y - 1) ? 0 : dart - 2 + 4 * n_x;
-      //         break;
-      //     case 3: // d4
-      //         out[dart*3] = dart - 1;
-      //         out[dart*3+1] = dart - 3;
-      //         out[dart*3+2] = (ix == 0) ? 0 : dart - 6;
-      //         break;
-      // }
     }
 }
 
