@@ -12,8 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 cudarc = { version = "0.17.3", features = ["cuda-13000"] }
-# honeycomb = { git = "https://github.com/LIHPC-Computational-Geometry/honeycomb",  tag = "0.10.0"}
-honeycomb = { path = "../honeycomb/honeycomb" }
+honeycomb = { git = "https://github.com/LIHPC-Computational-Geometry/honeycomb" }
 rayon = "1.10.0"
 
 [build-dependencies]
