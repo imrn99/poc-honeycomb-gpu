@@ -1,6 +1,7 @@
 #include "../includes/honeycomb.h"
 
-
+// BLOCK: (4, 4, 4)
+// GRID:  (ceil(n_x/2), ceil(n_y/2), 1)
 extern "C" __global__ void generate_2d_grid_betaf(DartIdType* out, size_t n_x, size_t n_y, size_t n_out) {
     const int BETAS[4][3] = { {3, 1, 2}, {-1, 1, 6}, {-1, 1, -2}, {-1, -3, -6} };
     const int NX[4]       = { -4, 0, 4, 0 };
@@ -19,7 +20,8 @@ extern "C" __global__ void generate_2d_grid_betaf(DartIdType* out, size_t n_x, s
     }
 }
 
-
+// BLOCK: (4, 4, 4)
+// GRID:  (ceil(n_x/2), ceil(n_y/2), 1)
 extern "C" __global__ void generate_2d_grid_vertices(
     CuVertex2* out,
     float lc_x,
@@ -36,7 +38,7 @@ extern "C" __global__ void generate_2d_grid_vertices(
     uint64_t dart = 1 + 4 * ix + 4 * n_x * iy + threadIdx.z;
     // compute the vertex associated to every single dart;
     // we'll filter useful values when building on the host
-    if (dart < n_out && threadIdx.z < 24) {
+    if (dart < n_out) {
         out[dart] = {
             lc_x * (ix + OFFSETS[threadIdx.z][0]),
             lc_y * (iy + OFFSETS[threadIdx.z][1])
@@ -45,6 +47,8 @@ extern "C" __global__ void generate_2d_grid_vertices(
 }
 
 
+// BLOCK: (2, 2, 32)
+// GRID:  (ceil(n_x/2), ceil(n_y/2), n_z)
 extern "C" __global__ void generate_hex_grid_betaf(
     DartIdType* out,
     size_t n_x,
@@ -97,13 +101,11 @@ extern "C" __global__ void generate_hex_grid_betaf(
         +offset_y, +offset_y, +offset_y, +offset_y
     };
     // cell coordinates in the generated grid
-    // TODO: change to correct value
     uint64_t ix = threadIdx.x + blockIdx.x * blockDim.x;
     uint64_t iy = threadIdx.y + blockIdx.y * blockDim.y;
-    uint64_t iz = threadIdx.z + blockIdx.z * blockDim.z;
+    uint64_t iz = blockIdx.z;
     // dart of the thread
-    // TODO: change to correct value
-    uint64_t dart = 1 + offset_x * ix + offset_y * iy + threadIdx.z;
+    uint64_t dart = 1 + offset_x * ix + offset_y * iy + offset_z * iz + threadIdx.z;
     // boundary conditions
     int conds[24] = {
         iy == 0      , iy == 0      , iy == 0      , iy == 0      ,
@@ -114,7 +116,7 @@ extern "C" __global__ void generate_hex_grid_betaf(
         iy == n_y - 1, iy == n_y - 1, iy == n_y - 1, iy == n_y - 1,
     };
     // beta images
-    if (dart*3 + 2 < n_out) {
+    if (dart*3 + 2 < n_out && threadIdx.z < 24) {
         out[dart*3]   = dart + BETAS[threadIdx.z][0];
         out[dart*3+1] = dart + BETAS[threadIdx.z][1];
         out[dart*3+2] = dart + BETAS[threadIdx.z][2];
@@ -123,6 +125,8 @@ extern "C" __global__ void generate_hex_grid_betaf(
 }
 
 
+// BLOCK: (2, 2, 32)
+// GRID:  (ceil(n_x/2), ceil(n_y/2), n_z)
 extern "C" __global__ void generate_hex_grid_vertices(
     CuVertex3* out,
     float lc_x,
@@ -160,16 +164,17 @@ extern "C" __global__ void generate_hex_grid_vertices(
     };
     int offset_x = 24;
     int offset_y = offset_x * n_x;
+    int offset_z = offset_y * n_y;
 
     // cell coordinates in the generated grid
     uint64_t ix = threadIdx.x + blockIdx.x * blockDim.x;
     uint64_t iy = threadIdx.y + blockIdx.y * blockDim.y;
-    uint64_t iz = threadIdx.z + blockIdx.z * blockDim.z;
+    uint64_t iz = blockIdx.z;
     // dart of the thread
-    uint64_t dart = 1 + offset_x * ix + offset_y * iy + threadIdx.z;
+    uint64_t dart = 1 + offset_x * ix + offset_y * iy + offset_z * iz + threadIdx.z;
     // compute the vertex associated to every single dart;
     // we'll filter useful values when building on the host
-    if (dart < n_out) {
+    if (dart < n_out && threadIdx.z < 24) {
         out[dart] = {
             lc_x * (ix + OFFSETS[threadIdx.z][0]),
             lc_y * (iy + OFFSETS[threadIdx.z][1]),
