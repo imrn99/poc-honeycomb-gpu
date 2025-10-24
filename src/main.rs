@@ -1,4 +1,5 @@
 mod dim2;
+mod dim3;
 
 use std::time::Instant;
 

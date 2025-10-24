@@ -27,7 +27,6 @@ extern "C" __global__ void generate_2d_grid_vertices(
     float lc_x,
     float lc_y,
     size_t n_x,
-    size_t n_y,
     size_t n_out
 ) {
     const int OFFSETS[4][2] = { {0, 1}, {0, 0}, {1, 0}, {1, 1} };
@@ -116,11 +115,11 @@ extern "C" __global__ void generate_hex_grid_betaf(
         iy == n_y - 1, iy == n_y - 1, iy == n_y - 1, iy == n_y - 1,
     };
     // beta images
-    if (dart*3 + 2 < n_out && threadIdx.z < 24) {
-        out[dart*3]   = dart + BETAS[threadIdx.z][0];
-        out[dart*3+1] = dart + BETAS[threadIdx.z][1];
-        out[dart*3+2] = dart + BETAS[threadIdx.z][2];
-        out[dart*3+3] = conds[threadIdx.z] ? 0 : dart + BETAS[threadIdx.z][3] + offsets[threadIdx.z] * n_x;
+    if (dart*4 + 3 < n_out && threadIdx.z < 24) {
+        out[dart*4]   = dart + BETAS[threadIdx.z][0];
+        out[dart*4+1] = dart + BETAS[threadIdx.z][1];
+        out[dart*4+2] = dart + BETAS[threadIdx.z][2];
+        out[dart*4+3] = conds[threadIdx.z] ? 0 : dart + BETAS[threadIdx.z][3] + offsets[threadIdx.z] * n_x;
     }
 }
 
