@@ -13,5 +13,9 @@ struct CuVertex2 {
     float data[2];
 };
 
+struct CuVertex3 {
+    float data[3];
+};
+
 #endif // HONEYCOMB
 
