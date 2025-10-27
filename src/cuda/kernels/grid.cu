@@ -46,7 +46,7 @@ extern "C" __global__ void generate_2d_grid_vertices(
 }
 
 
-// BLOCK: (2, 2, 32)
+// BLOCK: (2, 2, 24)
 // GRID:  (ceil(n_x/2), ceil(n_y/2), n_z)
 extern "C" __global__ void generate_hex_grid_betaf(
     DartIdType* out,
@@ -69,7 +69,7 @@ extern "C" __global__ void generate_hex_grid_betaf(
         { 3,  1, -4,  8},
         {-1,  1, 14, 10},
         {-1,  1, 14,  8},
-        {-1, -3,  2,  7},
+        {-1, -3,  2,  6},
         // 3rd face
         { 3,  1, -7,  8},
         {-1,  1, -2, 10},
@@ -115,16 +115,16 @@ extern "C" __global__ void generate_hex_grid_betaf(
         iy == n_y - 1, iy == n_y - 1, iy == n_y - 1, iy == n_y - 1,
     };
     // beta images
-    if (dart*4 + 3 < n_out && threadIdx.z < 24) {
+    if (dart*4 + 3 < n_out) {
         out[dart*4]   = dart + BETAS[threadIdx.z][0];
         out[dart*4+1] = dart + BETAS[threadIdx.z][1];
         out[dart*4+2] = dart + BETAS[threadIdx.z][2];
-        out[dart*4+3] = conds[threadIdx.z] ? 0 : dart + BETAS[threadIdx.z][3] + offsets[threadIdx.z] * n_x;
+        out[dart*4+3] = conds[threadIdx.z] ? 0 : dart + BETAS[threadIdx.z][3] + offsets[threadIdx.z];
     }
 }
 
 
-// BLOCK: (2, 2, 32)
+// BLOCK: (2, 2, 24)
 // GRID:  (ceil(n_x/2), ceil(n_y/2), n_z)
 extern "C" __global__ void generate_hex_grid_vertices(
     CuVertex3* out,
@@ -173,7 +173,7 @@ extern "C" __global__ void generate_hex_grid_vertices(
     uint64_t dart = 1 + offset_x * ix + offset_y * iy + offset_z * iz + threadIdx.z;
     // compute the vertex associated to every single dart;
     // we'll filter useful values when building on the host
-    if (dart < n_out && threadIdx.z < 24) {
+    if (dart < n_out) {
         out[dart] = {
             lc_x * (ix + OFFSETS[threadIdx.z][0]),
             lc_y * (iy + OFFSETS[threadIdx.z][1]),

@@ -9,16 +9,16 @@ use honeycomb::prelude::{CMap3, CMapBuilder, CoordsFloat, Vertex3};
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-pub const N_X: usize = 128;
-pub const N_Y: usize = 128;
-pub const N_Z: usize = 128;
+pub const N_X: usize = 100;
+pub const N_Y: usize = 100;
+pub const N_Z: usize = 100;
 const LEN_CELL_X: f32 = 1.0;
 const LEN_CELL_Y: f32 = 1.0;
 const LEN_CELL_Z: f32 = 1.0;
 pub const N_DARTS: usize = 1 + N_X * N_Y * N_Z * 24;
 const KERNEL: &str = include_str!(concat!(env!("OUT_DIR"), "/grid.ptx"));
 
-const BLOCK_DIMS: (u32, u32, u32) = (2, 2, 32);
+const BLOCK_DIMS: (u32, u32, u32) = (2, 2, 24);
 const GRID_DIMS: (u32, u32, u32) = (
     (N_X as u32).div_ceil(BLOCK_DIMS.0),
     (N_Y as u32).div_ceil(BLOCK_DIMS.1),
@@ -89,7 +89,15 @@ pub fn build_gpu<T: CoordsFloat>() -> Result<CMap3<T>, DriverError> {
     let map: CMap3<T> = CMapBuilder::<3>::from_n_darts(N_DARTS - 1).build().unwrap();
 
     let betas = betas.as_slice()?;
-    let bcs = betas.chunks(4).enumerate().collect::<Vec<_>>();
+    // let betas: Vec<_> = betas
+    //     .as_slice()?
+    //     .chunks_exact(32)
+    //     .flat_map(|c| &c[..24])
+    //     .cloned()
+    //     .collect();
+    let bcs = betas.chunks_exact(4).enumerate().collect::<Vec<_>>();
+    // println!("{}", bcs.len());
+    // panic!();
     bcs.into_par_iter().for_each(|(i, c)| {
         let d = i as DartIdType; // account for the null dart
         let &[b0, b1, b2, b3] = c else { unreachable!() };
@@ -97,6 +105,14 @@ pub fn build_gpu<T: CoordsFloat>() -> Result<CMap3<T>, DriverError> {
     });
 
     let vertices = vertices.as_slice()?;
+    // let vertices: Vec<_> = vertices
+    //     .as_slice()?
+    //     .chunks_exact(32)
+    //     .flat_map(|c| &c[..24])
+    //     .cloned()
+    //     .collect();
+    // println!("{}", vertices.len());
+    // panic!();
     map.par_iter_vertices().for_each(|d| {
         map.force_write_vertex(d as VertexIdType, vertices[d as usize]);
     });
